@@ -53,7 +53,7 @@ class User
       return;
     }
     
-    $this->userFile = $this->userDir . $this->userId . '/-this.yml';
+    $this->userFile = $this->userDir . $this->userId . '/user.yml';
     
     if( file_exists($this->userFile) )
     {
@@ -228,6 +228,9 @@ class User
     
     // Create user ID
     $this->userId = $this->generateUserId();
+    
+    // Set user file path
+    $this->userFile = $this->userDir . $this->userId . '/user.yml';
     
     // Set user data
     $this->userData = array_merge($userData, [
@@ -583,7 +586,7 @@ class User
         continue;
       }
       
-      $userFile = $this->userDir . $userId . '/-this.yml';
+      $userFile = $this->userDir . $userId . '/user.yml';
       
       if( file_exists($userFile) )
       {
@@ -623,7 +626,7 @@ class User
         continue;
       }
       
-      $userFile = $this->userDir . $userId . '/-this.yml';
+      $userFile = $this->userDir . $userId . '/user.yml';
       
       if( file_exists($userFile) )
       {

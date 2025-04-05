@@ -2,6 +2,8 @@
 
 A PHP micro framework with minimal functionality for web applications.
 
+Intention: Quickly upgrade an app started for a single user to a multiuser app with session management, multiple login options, error handling and logging with minimal changes.
+
 ## Features
 
 - Configuration via YAML files

@@ -1,0 +1,28 @@
+app:
+  name: MicroFrm App
+  debug: true
+
+session:
+  timeout: 3600  # 1 hour
+  secure: true
+  httponly: true
+
+login:
+  methods:
+    - email
+  google:
+    enabled: false
+    client_id: ''
+    client_secret: ''
+  auth0:
+    enabled: false
+    domain: ''
+    client_id: ''
+    client_secret: ''
+  unique_url:
+    enabled: true
+    expiry: 86400  # 24 hours
+
+security:
+  csrf_token_expiry: 3600
+  password_algo: 2  # PASSWORD_ARGON2ID

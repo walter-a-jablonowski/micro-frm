@@ -1,0 +1,16 @@
+{
+  "name": "micro-frm/framework",
+  "description": "A PHP micro framework with minimal functionality for web apps",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "MicroFrm\\": "lib/micro-frm/"
+    }
+  },
+  "require": {
+    "php": ">=7.4",
+    "symfony/yaml": "^5.4",
+    "google/apiclient": "^2.12"
+  }
+}

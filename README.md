@@ -73,6 +73,34 @@ login:
     client_secret: 'YOUR_CLIENT_SECRET'
 ```
 
+### Login via Unique URL
+
+To enable Unique URL login:
+
+1. Update your `config.yml` to include the unique URL login method:
+
+```yaml
+login:
+  methods:
+    - email
+    - unique_url
+  unique_url:
+    enabled: true
+    # Optional: Set expiration time in seconds (default: 30 days)
+    expiration: 2592000
+    # Optional: Set URL base (default: current domain)
+    url_base: 'http://your-domain.com'
+```
+
+2. Users can generate a unique login URL from the login page by clicking "Login with Unique URL"
+3. The system will generate a secure token and provide a URL that can be used for passwordless login
+4. Optionally, users can associate their email with the unique URL for easier identification
+5. The unique URL will remain valid until its expiration date or until manually revoked
+
+This login method is particularly useful for:
+- Sharing access with users who don't want to create an account
+- Temporary access to specific features
+- Systems where security requirements are moderate and convenience is important
 
 LICENSE
 ----------------------------------------------------------

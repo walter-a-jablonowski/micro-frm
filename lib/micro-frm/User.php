@@ -9,6 +9,8 @@ namespace MicroFrm;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Google\Client as GoogleClient;
+use MicroFrm\Config;
+use MicroFrm\Session;
 
 class User
 {
@@ -17,9 +19,13 @@ class User
   private $isAuthenticated = false;
   private $userDir = null;
   private $userFile = null;
+  private $config = null;
+  private $session = null;
   
-  public function __construct()
+  public function __construct( Config $config, Session $session )
   {
+    $this->config = $config;
+    $this->session = $session;
     $this->userDir = __DIR__ . '/../../data/users/';
     
     // Ensure user directory exists
@@ -29,10 +35,9 @@ class User
     }
     
     // Check if user is already logged in
-    $session = App::session();
-    if( $session->has('user_id') )
+    if( $this->session->has('user_id') )
     {
-      $this->userId = $session->get('user_id');
+      $this->userId = $this->session->get('user_id');
       $this->loadUserData();
       $this->isAuthenticated = true;
     }
@@ -190,10 +195,9 @@ class User
         $this->updatePasswordHashIfNeeded($password);
         
         // Set session
-        $session = App::session();
-        $session->set('user_id', $this->userId);
-        $session->set('login_time', time());
-        $session->set('login_method', 'email');
+        $this->session->set('user_id', $this->userId);
+        $this->session->set('login_time', time());
+        $this->session->set('login_method', 'email');
         
         $this->isAuthenticated = true;
         
@@ -230,17 +234,17 @@ class User
       'email' => $email,
       'password' => $this->hashPassword($password),
       'created_at' => date('Y-m-d H:i:s'),
-      'updated_at' => date('Y-m-d H:i:s')
+      'updated_at' => date('Y-m-d H:i:s'),
+      'unique_url_tokens' => [] // Initialize empty array for tokens
     ]);
     
     // Save user data
     if( $this->save() )
     {
       // Set session
-      $session = App::session();
-      $session->set('user_id', $this->userId);
-      $session->set('login_time', time());
-      $session->set('login_method', 'email');
+      $this->session->set('user_id', $this->userId);
+      $this->session->set('login_time', time());
+      $this->session->set('login_method', 'email');
       
       $this->isAuthenticated = true;
       
@@ -259,7 +263,7 @@ class User
    */
   public function loginWithGoogle( $token ) : bool
   {
-    $config = App::config();
+    $config = $this->config;
     
     // Check if Google login is enabled
     if( ! $config->get('login.google.enabled', false) )
@@ -310,10 +314,9 @@ class User
         }
         
         // Set session
-        $session = App::session();
-        $session->set('user_id', $this->userId);
-        $session->set('login_time', time());
-        $session->set('login_method', 'google');
+        $this->session->set('user_id', $this->userId);
+        $this->session->set('login_time', time());
+        $this->session->set('login_method', 'google');
         
         $this->isAuthenticated = true;
         
@@ -337,7 +340,7 @@ class User
    */
   public function loginWithAuth0( $userInfo ) : bool
   {
-    $config = App::config();
+    $config = $this->config;
     
     // Check if Auth0 login is enabled
     if( ! $config->get('login.auth0.enabled', false) )
@@ -383,10 +386,9 @@ class User
         }
         
         // Set session
-        $session = App::session();
-        $session->set('user_id', $this->userId);
-        $session->set('login_time', time());
-        $session->set('login_method', 'auth0');
+        $this->session->set('user_id', $this->userId);
+        $this->session->set('login_time', time());
+        $this->session->set('login_method', 'auth0');
         
         $this->isAuthenticated = true;
         
@@ -410,7 +412,7 @@ class User
    */
   public function generateUniqueUrlToken( $email = null ) : ?string
   {
-    $config = App::config();
+    $config = $this->config;
     
     // Check if unique URL login is enabled
     if( ! $config->get('login.unique_url.enabled', false) )
@@ -482,7 +484,7 @@ class User
    */
   public function loginWithUniqueUrl( $token ) : bool
   {
-    $config = App::config();
+    $config = $this->config;
     
     // Check if unique URL login is enabled
     if( ! $config->get('login.unique_url.enabled', false) )
@@ -510,11 +512,10 @@ class User
           if( $expiresAt > time() )
           {
             // Set session
-            $session = App::session();
-            $session->set('user_id', $this->userId);
-            $session->set('login_time', time());
-            $session->set('login_method', 'unique_url');
-            $session->set('unique_url_token', $token);
+            $this->session->set('user_id', $this->userId);
+            $this->session->set('login_time', time());
+            $this->session->set('login_method', 'unique_url');
+            $this->session->set('unique_url_token', $token);
             
             $this->isAuthenticated = true;
             
@@ -543,21 +544,19 @@ class User
    */
   public function logout() : void
   {
-    $session = App::session();
-    
     // Check if logged in with unique URL
-    if( $session->get('login_method') === 'unique_url' && $session->has('unique_url_token') )
+    if( $this->session->get('login_method') === 'unique_url' && $this->session->has('unique_url_token') )
     {
-      $token = $session->get('unique_url_token');
+      $token = $this->session->get('unique_url_token');
       
       // Don't remove token, it can be used again
     }
     
     // Clear session
-    $session->remove('user_id');
-    $session->remove('login_time');
-    $session->remove('login_method');
-    $session->remove('unique_url_token');
+    $this->session->remove('user_id');
+    $this->session->remove('login_time');
+    $this->session->remove('login_method');
+    $this->session->remove('unique_url_token');
     
     // Reset user data
     $this->userId = null;
@@ -660,7 +659,7 @@ class User
    */
   private function hashPassword( $password ) : string
   {
-    $config = App::config();
+    $config = $this->config;
     $algo = $config->get('security.password_algo', PASSWORD_ARGON2ID);
     
     return password_hash($password, $algo);
@@ -671,7 +670,7 @@ class User
    */
   private function updatePasswordHashIfNeeded( $password ) : void
   {
-    $config = App::config();
+    $config = $this->config;
     $algo = $config->get('security.password_algo', PASSWORD_ARGON2ID);
     
     if( password_needs_rehash($this->userData['password'], $algo) )

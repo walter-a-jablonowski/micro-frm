@@ -15,10 +15,10 @@ class App
   
   private function __construct()
   {
-    // Initialize components
+    // Initialize components in the correct order to avoid circular dependencies
     $this->config = new Config();
-    $this->session = new Session();
-    $this->user = new User();
+    $this->session = new Session($this->config);
+    $this->user = new User($this->config, $this->session);
   }
   
   /**

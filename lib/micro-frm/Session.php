@@ -6,6 +6,9 @@
 
 namespace MicroFrm;
 
+use Symfony\Component\Yaml\Yaml;
+use MicroFrm\Config;
+
 class Session
 {
   private $sessionId = null;
@@ -13,9 +16,11 @@ class Session
   private $sessionDir = null;
   private $sessionFile = null;
   private $isStarted = false;
+  private $config = null;
   
-  public function __construct()
+  public function __construct( Config $config )
   {
+    $this->config = $config;
     $this->sessionDir = __DIR__ . '/../../data/sessions/';
     
     // Ensure session directory exists
@@ -42,13 +47,12 @@ class Session
   public function start() : bool
   {
     // Configure session
-    $config = App::config();
-    $secure = $config->get('session.secure', true);
-    $httpOnly = $config->get('session.httponly', true);
+    $secure = $this->config->get('session.secure', true);
+    $httpOnly = $this->config->get('session.httponly', true);
     
     // Set session cookie parameters
     session_set_cookie_params([
-      'lifetime' => $config->get('session.timeout', 3600),
+      'lifetime' => $this->config->get('session.timeout', 3600),
       'path' => '/',
       'secure' => $secure,
       'httponly' => $httpOnly,
@@ -260,8 +264,7 @@ class Session
    */
   public function cleanupExpiredSessions() : void
   {
-    $config = App::config();
-    $timeout = $config->get('session.timeout', 3600);
+    $timeout = $this->config->get('session.timeout', 3600);
     $now = time();
     
     $sessions = scandir($this->sessionDir);
@@ -304,8 +307,7 @@ class Session
       $this->regenerateCsrfToken();
     }
     
-    $config = App::config();
-    $expiry = $config->get('security.csrf_token_expiry', 3600);
+    $expiry = $this->config->get('security.csrf_token_expiry', 3600);
     
     // Check if token is expired
     if( time() - $this->get('csrf_token_time') > $expiry )

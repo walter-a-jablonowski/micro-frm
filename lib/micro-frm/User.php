@@ -178,7 +178,6 @@ class User
    */
   public function login( $email, $password ) : bool
   {
-    // Find user by email
     $userId = $this->findUserByEmail($email);
     
     if( $userId !== null )
@@ -188,15 +187,15 @@ class User
       $this->loadUserData();
       
       // Verify password
-      if( isset($this->userData['password']) && 
-          password_verify($password, $this->userData['password']) )
+      if( isset($this->userData['password'])
+      &&  password_verify($password, $this->userData['password']))
       {
         // Update password hash if needed
         $this->updatePasswordHashIfNeeded($password);
         
         // Set session
-        $this->session->set('user_id', $this->userId);
-        $this->session->set('login_time', time());
+        $this->session->set('user_id',      $this->userId);
+        $this->session->set('login_time',   time());
         $this->session->set('login_method', 'email');
         
         $this->isAuthenticated = true;
@@ -206,7 +205,7 @@ class User
       }
     }
     
-    Log::warning("Failed login attempt", ['email' => $email]);
+    Log::warning('Failed login attempt', ['email' => $email]);
     return false;
   }
   

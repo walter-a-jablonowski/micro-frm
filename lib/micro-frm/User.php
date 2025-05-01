@@ -117,7 +117,7 @@ class User
    * Get user data
    * 
    * @param string $key User data key
-   * @param mixed $default Default value if key not found
+   * @param mixed $default Default value if key missing
    * @return mixed User data value
    */
   public function get( $key, $default = null )
@@ -304,7 +304,7 @@ class User
           $this->userId = $userId;
           $this->loadUserData();
           
-          // Update Google ID if not set
+          // Update Google ID if missing
           if( ! isset($this->userData['google_id']) )
           {
             $this->userData['google_id'] = $payload['sub'];
@@ -373,7 +373,7 @@ class User
       // Find user by Auth0 ID first (more reliable than email)
       $userId = $this->findUserByAuth0Id($userInfo['sub']);
       
-      // If not found by Auth0 ID, try email
+      // If missing by Auth0 ID, try email
       if( $userId === null )
         $userId = $this->findUserByEmail($email);
       
@@ -400,7 +400,7 @@ class User
         $this->userId = $userId;
         $this->loadUserData();
         
-        // Update Auth0 ID if not set
+        // Update Auth0 ID if missing
         if( ! isset($this->userData['auth0_id']))
         {
           $this->userData['auth0_id']   = $userInfo['sub'];
@@ -458,7 +458,7 @@ class User
    * Find user by Auth0 ID
    * 
    * @param string $auth0Id Auth0 user ID
-   * @return string|null User ID or null if not found
+   * @return string|null User ID or null if missing
    */
   private function findUserByAuth0Id( $auth0Id ) : ?string
   {
@@ -575,7 +575,7 @@ class User
    * Find user by email
    * 
    * @param string $email User email
-   * @return string|null User ID or null if not found
+   * @return string|null User ID or null if missing
    */
   private function findUserByEmail( $email ) : ?string
   {
@@ -608,7 +608,7 @@ class User
    * Find user by unique URL token
    * 
    * @param string $token Unique URL token
-   * @return string|null User ID or null if not found
+   * @return string|null User ID or null if missing
    */
   private function findUserByUniqueUrlToken( $token ) : ?string
   {

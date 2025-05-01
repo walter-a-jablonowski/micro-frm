@@ -87,7 +87,7 @@ class ProviderHandler
     }
     
     if( ! class_exists('\Auth0\SDK\Auth0') ) {
-      Log::error('Auth0 SDK not found. Make sure to run composer install.');
+      Log::error('Auth0 SDK missing. Make sure to run composer install.');
       header('Location: index.php?page=login&error=auth0_sdk_missing');
       exit;
     }
@@ -157,7 +157,7 @@ class ProviderHandler
           }
           else {
             // redir to login page with error
-            Log::error('Auth0 callback did not return valid credentials');
+            Log::error('Auth0 callback retured invalid credentials');
             header('Location: index.php?page=login&error=auth0_no_credentials');
             exit;
           }

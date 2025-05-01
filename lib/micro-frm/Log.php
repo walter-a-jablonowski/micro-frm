@@ -52,7 +52,7 @@ class Log
       $timestamp,
       $level,
       $source,
-      str_replace('"', '""', $message), // Escape quotes for CSV
+      str_replace('"', '""', $message), // Escape quo for CSV
       $contextStr
     ];
     

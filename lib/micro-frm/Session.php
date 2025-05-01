@@ -25,15 +25,11 @@ class Session
     
     // Ensure session directory exists
     if( ! is_dir($this->sessionDir) )
-    {
       mkdir($this->sessionDir, 0755, true);
-    }
     
-    // Start session if not already started
+    // Start session if missing
     if( session_status() === PHP_SESSION_NONE )
-    {
       $this->start();
-    }
     else
     {
       $this->sessionId = session_id();
@@ -168,7 +164,7 @@ class Session
    * Get a session value
    * 
    * @param string $key Session key
-   * @param mixed $default Default value if key not found
+   * @param mixed $default Default value if key missing
    * @return mixed Session value
    */
   public function get( $key, $default = null )

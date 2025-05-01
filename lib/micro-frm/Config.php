@@ -45,7 +45,7 @@ class Config
             }
             else
             {
-              Log::warning("Config include file not found: $includePath");
+              Log::warning("Config include file missing: $includePath");
             }
           }
         }
@@ -67,9 +67,9 @@ class Config
   /**
    * Get a configuration value
    * 
-   * @param string $key Dot notation key (e.g. 'app.name')
-   * @param mixed $default Default value if key not found
-   * @return mixed Configuration value
+   * @param  string $key
+   * @param  mixed  $default Default value if key missing
+   * @return mixed  Configuration value
    */
   public function get( $key, $default = null )
   {
@@ -92,8 +92,8 @@ class Config
   /**
    * Set a configuration value
    * 
-   * @param string $key Dot notation key
-   * @param mixed $value Value to set
+   * @param string $key
+   * @param mixed  $value Value to set
    */
   public function set( $key, $value ) : void
   {

@@ -1,17 +1,12 @@
 <?php
-/**
- * index.php
- * Main entry point for the application
- */
 
-// Require composer autoloader
 require_once 'vendor/autoload.php';
 
 use MicroFrm\App;
 use MicroFrm\ErrorHandler;
 use MicroFrm\Log;
 
-// Initialize error handler
+
 ErrorHandler::getInstance()->register();
 
 // Initialize app
@@ -67,8 +62,7 @@ switch( $page )
     break;
     
   case 'home':
-  default:
-    // Show home page
+  default:  // Show home page
     require_once 'pages/home/controller.php';
     break;
 }

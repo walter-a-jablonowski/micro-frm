@@ -1,17 +1,12 @@
 <?php
-/**
- * ajax.php
- * Handles AJAX requests
- */
 
-// Require composer autoloader
 require_once 'vendor/autoload.php';
 
 use MicroFrm\App;
 use MicroFrm\ErrorHandler;
 use MicroFrm\Log;
 
-// Initialize error handler
+
 ErrorHandler::getInstance()->register();
 
 // Initialize app
@@ -27,7 +22,7 @@ if( ! $requestData || ! isset($requestData['identifier']) )
     'success' => false,
     'error' => [
       'message' => 'Invalid request',
-      'type' => 'Request Error'
+      'type'    => 'Request Error'
     ]
   ]);
   exit;
@@ -83,7 +78,7 @@ if( ! $isLoggedIn && ! in_array($identifier, ['login', 'register', 'unique-url']
     'success' => false,
     'error' => [
       'message' => 'Authentication required',
-      'type' => 'Auth Error'
+      'type'    => 'Auth Error'
     ]
   ]);
   exit;
@@ -110,9 +105,7 @@ switch( $identifier )
     $handlerFile = "pages/{$identifier}/ajax/" . basename($identifier) . ".php";
     
     if( file_exists($handlerFile) )
-    {
       require_once $handlerFile;
-    }
     else
     {
       sendJsonResponse([

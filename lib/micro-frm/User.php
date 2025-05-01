@@ -268,7 +268,7 @@ class User
     $config = $this->config;
     
     // Check if Google login is enabled
-    if( ! $config->get('login.google.enabled', false) )
+    if( ! $config->get('login.google.enabled', false))
       return false;
     
     // Verify token
@@ -334,7 +334,7 @@ class User
   /**
    * Login with Auth0
    * 
-   * @param array $userInfo Auth0 user info
+   * @param array $userInfo Auth0 user info from SDK
    * @return bool True if login successful
    */
   public function loginWithAuth0( $userInfo ) : bool
@@ -347,51 +347,105 @@ class User
     
     try
     {
+      // Validate required Auth0 user info
+      if( empty($userInfo['sub']) )
+      {
+        Log::error("Auth0 login error: Missing subject identifier (sub)");
+        return false;
+      }
+      
       $email = $userInfo['email'] ?? null;
       
-      if( $email )
+      if( ! $email )
       {
-        // Find user by email or create new user
+        Log::error("Auth0 login error: Missing email");
+        return false;
+      }
+      
+      // Check if email is verified (optional security check)
+      $emailVerified = $userInfo['email_verified'] ?? false;
+      if( ! $emailVerified && $config->get('login.auth0.require_verified_email', true) )
+      {
+        Log::error("Auth0 login error: Email unverified", ['email' => $email]);
+        return false;
+      }
+      
+      // Find user by Auth0 ID first (more reliable than email)
+      $userId = $this->findUserByAuth0Id($userInfo['sub']);
+      
+      // If not found by Auth0 ID, try email
+      if( $userId === null )
         $userId = $this->findUserByEmail($email);
+      
+      if( $userId === null )
+      {
+        // Create new user
+        $this->userId = $this->generateUserId();
+        $this->userData = [
+          'email'         => $email,
+          'name'          => $userInfo['name'] ?? '',
+          'auth0_id'      => $userInfo['sub'],
+          'picture'       => $userInfo['picture'] ?? null,
+          'locale'        => $userInfo['locale'] ?? null,
+          'created_at'    => date('Y-m-d H:i:s'),
+          'updated_at'    => date('Y-m-d H:i:s')
+        ];
+        $this->save();
         
-        if( $userId === null )
+        Log::info('New user created from Auth0 login', ['email' => $email, 'auth0_id' => $userInfo['sub']]);
+      }
+      else
+      {
+        // Load existing user
+        $this->userId = $userId;
+        $this->loadUserData();
+        
+        // Update Auth0 ID if not set
+        if( ! isset($this->userData['auth0_id']))
         {
-          // Create new user
-          $this->userId = $this->generateUserId();
-          $this->userData = [
-            'email'      => $email,
-            'name'       => $userInfo['name'] ?? '',
-            'auth0_id'   => $userInfo['sub'],
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s')
-          ];
+          $this->userData['auth0_id']   = $userInfo['sub'];
+          $this->userData['updated_at'] = date('Y-m-d H:i:s');
           $this->save();
         }
-        else
+        
+        // Update user profile data if needed
+        $needsUpdate = false;
+        
+        // Update name if provided and different
+        if( isset($userInfo['name'])
+        &&  ( ! isset($this->userData['name']) || $this->userData['name'] !== $userInfo['name']))
         {
-          // Load existing user
-          $this->userId = $userId;
-          $this->loadUserData();
-          
-          // Update Auth0 ID if not set
-          if( ! isset($this->userData['auth0_id']) )
-          {
-            $this->userData['auth0_id']   = $userInfo['sub'];
-            $this->userData['updated_at'] = date('Y-m-d H:i:s');
-            $this->save();
-          }
+          $this->userData['name'] = $userInfo['name'];
+          $needsUpdate = true;
         }
         
-        // Set session
-        $this->session->set('user_id', $this->userId);
-        $this->session->set('login_time', time());
-        $this->session->set('login_method', 'auth0');
+        // Update picture if provided and different
+        if( isset($userInfo['picture'])
+        &&  ( ! isset($this->userData['picture']) || $this->userData['picture'] !== $userInfo['picture']))
+        {
+          $this->userData['picture'] = $userInfo['picture'];
+          $needsUpdate = true;
+        }
         
-        $this->isAuthenticated = true;
-        
-        Log::info("User logged in with Auth0: {$this->userId}", ['email' => $email]);
-        return true;
+        if( $needsUpdate )
+        {
+          $this->userData['updated_at'] = date('Y-m-d H:i:s');
+          $this->save();
+        }
       }
+      
+      // Set session
+      $this->session->set('user_id', $this->userId);
+      $this->session->set('login_time', time());
+      $this->session->set('login_method', 'auth0');
+      
+      // Store Auth0 ID in session for reference
+      $this->session->set('auth0_id', $userInfo['sub']);
+      
+      $this->isAuthenticated = true;
+      
+      Log::info("User logged in with Auth0: {$this->userId}", ['email' => $email, 'auth0_id' => $userInfo['sub']]);
+      return true;
     }
     catch( \Exception $e ) {
       Log::error("Auth0 login error: " . $e->getMessage());
@@ -401,72 +455,36 @@ class User
   }
   
   /**
-   * Generate a unique URL for login
+   * Find user by Auth0 ID
    * 
-   * @param string $email User email (optional)
-   * @return string|null Unique URL token or null on failure
+   * @param string $auth0Id Auth0 user ID
+   * @return string|null User ID or null if not found
    */
-  public function generateUniqueUrlToken( $email = null ) : ?string
+  private function findUserByAuth0Id( $auth0Id ) : ?string
   {
-    $config = $this->config;
-    
-    // Check if unique URL login is enabled
-    if( ! $config->get('login.unique_url.enabled', false) )
-      return null;
-    
-    try
+    foreach( scandir($this->userDir) as $userId )
     {
-      // Generate token
-      $token = bin2hex(random_bytes(32));
-      $expiry = time() + $config->get('login.unique_url.expiry', 86400);
+      if( $userId === '.' || $userId === '..' )
+        continue;
       
-      // Find or create user
-      if( $email !== null )
+      $userFile = $this->userDir . $userId . '/user.yml';
+      
+      if( file_exists($userFile) )
       {
-        $userId = $this->findUserByEmail($email);
-        
-        if( $userId === null )
+        try
         {
-          // Create new user
-          $this->userId = $this->generateUserId();
-          $this->userData = [
-            'email' => $email,
-            'created_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s')
-          ];
+          $userData = Yaml::parseFile($userFile);
+          
+          if( isset($userData['auth0_id']) && $userData['auth0_id'] === $auth0Id )
+            return $userId;
         }
-        else
-        {
-          // Load existing user
-          $this->userId = $userId;
-          $this->loadUserData();
+        catch( ParseException $e ) {
+          Log::error("Error parsing user file: " . $e->getMessage());
         }
       }
-      else
-      {
-        // Create anonymous user
-        $this->userId = $this->generateUserId();
-        $this->userData = [
-          'is_anonymous' => true,
-          'created_at' => date('Y-m-d H:i:s'),
-          'updated_at' => date('Y-m-d H:i:s')
-        ];
-      }
-      
-      // Save token
-      $this->userData['unique_url_tokens'][$token] = [
-        'created_at' => date('Y-m-d H:i:s'),
-        'expires_at' => date('Y-m-d H:i:s', $expiry)
-      ];
-      
-      $this->save();
-      
-      return $token;
     }
-    catch( \Exception $e ) {
-      Log::error("Failed to generate unique URL token: " . $e->getMessage());
-      return null;
-    }
+    
+    return null;
   }
   
   /**
@@ -651,6 +669,75 @@ class User
       $this->userData['password'] = $this->hashPassword($password);
       $this->userData['updated_at'] = date('Y-m-d H:i:s');
       $this->save();
+    }
+  }
+  
+  /**
+   * Generate a unique URL for login
+   * 
+   * @param string $email User email (optional)
+   * @return string|null Unique URL token or null on failure
+   */
+  public function generateUniqueUrlToken( $email = null ) : ?string
+  {
+    $config = $this->config;
+    
+    // Check if unique URL login is enabled
+    if( ! $config->get('login.unique_url.enabled', false) )
+      return null;
+    
+    try
+    {
+      // Generate token
+      $token = bin2hex(random_bytes(32));
+      $expiry = time() + $config->get('login.unique_url.expiry', 86400);
+      
+      // Find or create user
+      if( $email !== null )
+      {
+        $userId = $this->findUserByEmail($email);
+        
+        if( $userId === null )
+        {
+          // Create new user
+          $this->userId = $this->generateUserId();
+          $this->userData = [
+            'email' => $email,
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+          ];
+        }
+        else
+        {
+          // Load existing user
+          $this->userId = $userId;
+          $this->loadUserData();
+        }
+      }
+      else
+      {
+        // Create anonymous user
+        $this->userId = $this->generateUserId();
+        $this->userData = [
+          'is_anonymous' => true,
+          'created_at' => date('Y-m-d H:i:s'),
+          'updated_at' => date('Y-m-d H:i:s')
+        ];
+      }
+      
+      // Save token
+      $this->userData['unique_url_tokens'][$token] = [
+        'created_at' => date('Y-m-d H:i:s'),
+        'expires_at' => date('Y-m-d H:i:s', $expiry)
+      ];
+      
+      $this->save();
+      
+      return $token;
+    }
+    catch( \Exception $e ) {
+      Log::error("Failed to generate unique URL token: " . $e->getMessage());
+      return null;
     }
   }
 }

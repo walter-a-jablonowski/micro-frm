@@ -5,7 +5,7 @@
  */
 
 // Require composer autoloader
-require_once __DIR__ . '/vendor/autoload.php';
+require_once 'vendor/autoload.php';
 
 use MicroFrm\App;
 use MicroFrm\ErrorHandler;
@@ -90,23 +90,24 @@ if( ! $isLoggedIn && ! in_array($identifier, ['login', 'register', 'unique-url']
 }
 
 // Route request to handler
+
 switch( $identifier )
 {
   case 'login':
-    require_once __DIR__ . '/pages/login/ajax/login.php';
+    require_once 'pages/login/ajax/login.php';
     break;
     
   case 'register':
-    require_once __DIR__ . '/pages/register/ajax/register.php';
+    require_once 'pages/register/ajax/register.php';
     break;
     
   case 'unique-url':
-    require_once __DIR__ . '/pages/unique-url/ajax/generate.php';
+    require_once 'pages/unique-url/ajax/generate.php';
     break;
     
   default:
     // Check if handler file exists
-    $handlerFile = __DIR__ . "/pages/{$identifier}/ajax/" . basename($identifier) . ".php";
+    $handlerFile = "pages/{$identifier}/ajax/" . basename($identifier) . ".php";
     
     if( file_exists($handlerFile) )
     {

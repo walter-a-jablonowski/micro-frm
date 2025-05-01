@@ -5,7 +5,7 @@
  */
 
 // Require composer autoloader
-require_once __DIR__ . '/vendor/autoload.php';
+require_once 'vendor/autoload.php';
 
 use MicroFrm\App;
 use MicroFrm\ErrorHandler;
@@ -33,14 +33,15 @@ if( ! $isLoggedIn && $page !== 'login' && $page !== 'register' && $page !== 'uni
 }
 
 // Page routing
+
 switch( $page )
 {
   case 'login':
-    require_once __DIR__ . '/pages/login/controller.php';
+    require_once 'pages/login/controller.php';
     break;
     
   case 'register':
-    require_once __DIR__ . '/pages/register/controller.php';
+    require_once 'pages/register/controller.php';
     break;
     
   case 'logout':
@@ -61,16 +62,13 @@ switch( $page )
       header('Location: index.php?page=home');
       exit;
     }
-    else
-    {
-      // Invalid token, show error
-      require_once __DIR__ . '/pages/unique-url/controller.php';
-    }
+    else  // Invalid token, show error
+      require_once 'pages/unique-url/controller.php';
     break;
     
   case 'home':
   default:
     // Show home page
-    require_once __DIR__ . '/pages/home/controller.php';
+    require_once 'pages/home/controller.php';
     break;
 }

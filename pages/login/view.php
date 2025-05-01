@@ -87,7 +87,7 @@
       // Email login form
       const loginForm = document.getElementById('login-form');
       
-      if (loginForm) {
+      if( loginForm ) {
         loginForm.addEventListener('submit', async (e) => {
           e.preventDefault();
           
@@ -100,7 +100,7 @@
             password: password
           });
           
-          if (response && response.success) {
+          if( response && response.success) {
             // Redirect to home page
             window.location.href = 'index.php?page=home';
           }
@@ -110,7 +110,7 @@
       // Google login
       const googleLoginBtn = document.getElementById('google-login');
       
-      if (googleLoginBtn) {
+      if( googleLoginBtn) {
         googleLoginBtn.addEventListener('click', () => {
           // Redirect to Google login
           window.location.href = 'index.php?page=login&provider=google';
@@ -120,7 +120,7 @@
       // Auth0 login
       const auth0LoginBtn = document.getElementById('auth0-login');
       
-      if (auth0LoginBtn) {
+      if( auth0LoginBtn) {
         auth0LoginBtn.addEventListener('click', () => {
           // Redirect to Auth0 login
           window.location.href = 'index.php?page=login&provider=auth0';
@@ -130,7 +130,7 @@
       // Unique URL login
       const uniqueUrlLoginBtn = document.getElementById('unique-url-login');
       
-      if (uniqueUrlLoginBtn) {
+      if( uniqueUrlLoginBtn) {
         uniqueUrlLoginBtn.addEventListener('click', async () => {
           // Show modal for email input
           const email = prompt('Enter your email (optional):');
@@ -140,7 +140,7 @@
             email: email || null
           });
           
-          if (response && response.success && response.url) {
+          if( response && response.success && response.url) {
             // Show URL to user
             alert('Your unique login URL is:\n\n' + response.url + '\n\nSave this URL to login in the future.');
             

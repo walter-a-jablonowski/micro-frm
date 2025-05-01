@@ -13,9 +13,9 @@ $config = App::config();
 $csrfToken = $session->getCsrfToken();
 
 // Get enabled login methods
-$loginMethods = $config->get('login.methods', ['email']);
-$googleEnabled = $config->get('login.google.enabled', false);
-$auth0Enabled = $config->get('login.auth0.enabled', false);
+$loginMethods     = $config->get('login.methods', ['email']);
+$googleEnabled    = $config->get('login.google.enabled', false);
+$auth0Enabled     = $config->get('login.auth0.enabled', false);
 $uniqueUrlEnabled = $config->get('login.unique_url.enabled', false);
 
 // Include view

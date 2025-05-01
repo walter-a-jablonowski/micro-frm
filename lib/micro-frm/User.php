@@ -270,9 +270,7 @@ class User
     
     // Check if Google login is enabled
     if( ! $config->get('login.google.enabled', false) )
-    {
       return false;
-    }
     
     // Verify token
     $client = new GoogleClient(['client_id' => $config->get('login.google.client_id')]);
@@ -327,8 +325,7 @@ class User
         return true;
       }
     }
-    catch( \Exception $e )
-    {
+    catch( \Exception $e ) {
       Log::error("Google login error: " . $e->getMessage());
     }
     
@@ -346,10 +343,8 @@ class User
     $config = $this->config;
     
     // Check if Auth0 login is enabled
-    if( ! $config->get('login.auth0.enabled', false) )
-    {
+    if( ! $config->get('login.auth0.enabled', false))
       return false;
-    }
     
     try
     {
@@ -365,9 +360,9 @@ class User
           // Create new user
           $this->userId = $this->generateUserId();
           $this->userData = [
-            'email' => $email,
-            'name' => $userInfo['name'] ?? '',
-            'auth0_id' => $userInfo['sub'],
+            'email'      => $email,
+            'name'       => $userInfo['name'] ?? '',
+            'auth0_id'   => $userInfo['sub'],
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
           ];
@@ -382,7 +377,7 @@ class User
           // Update Auth0 ID if not set
           if( ! isset($this->userData['auth0_id']) )
           {
-            $this->userData['auth0_id'] = $userInfo['sub'];
+            $this->userData['auth0_id']   = $userInfo['sub'];
             $this->userData['updated_at'] = date('Y-m-d H:i:s');
             $this->save();
           }
@@ -399,8 +394,7 @@ class User
         return true;
       }
     }
-    catch( \Exception $e )
-    {
+    catch( \Exception $e ) {
       Log::error("Auth0 login error: " . $e->getMessage());
     }
     
@@ -419,9 +413,7 @@ class User
     
     // Check if unique URL login is enabled
     if( ! $config->get('login.unique_url.enabled', false) )
-    {
       return null;
-    }
     
     try
     {
@@ -472,8 +464,7 @@ class User
       
       return $token;
     }
-    catch( \Exception $e )
-    {
+    catch( \Exception $e ) {
       Log::error("Failed to generate unique URL token: " . $e->getMessage());
       return null;
     }
@@ -491,9 +482,7 @@ class User
     
     // Check if unique URL login is enabled
     if( ! $config->get('login.unique_url.enabled', false) )
-    {
       return false;
-    }
     
     try
     {
@@ -534,8 +523,7 @@ class User
         }
       }
     }
-    catch( \Exception $e )
-    {
+    catch( \Exception $e ) {
       Log::error("Unique URL login error: " . $e->getMessage());
     }
     
@@ -549,11 +537,8 @@ class User
   {
     // Check if logged in with unique URL
     if( $this->session->get('login_method') === 'unique_url' && $this->session->has('unique_url_token') )
-    {
       $token = $this->session->get('unique_url_token');
-      
       // Don't remove token, it can be used again
-    }
     
     // Clear session
     $this->session->remove('user_id');
@@ -577,14 +562,10 @@ class User
    */
   private function findUserByEmail( $email ) : ?string
   {
-    $users = scandir($this->userDir);
-    
-    foreach( $users as $userId )
+    foreach( scandir($this->userDir) as $userId )
     {
       if( $userId === '.' || $userId === '..' )
-      {
         continue;
-      }
       
       $userFile = $this->userDir . $userId . '/user.yml';
       
@@ -595,12 +576,9 @@ class User
           $userData = Yaml::parseFile($userFile);
           
           if( isset($userData['email']) && $userData['email'] === $email )
-          {
             return $userId;
-          }
         }
-        catch( ParseException $e )
-        {
+        catch( ParseException $e ) {
           Log::error("Error parsing user file: " . $e->getMessage());
         }
       }
@@ -617,14 +595,10 @@ class User
    */
   private function findUserByUniqueUrlToken( $token ) : ?string
   {
-    $users = scandir($this->userDir);
-    
-    foreach( $users as $userId )
+    foreach( scandir($this->userDir) as $userId )
     {
       if( $userId === '.' || $userId === '..' )
-      {
         continue;
-      }
       
       $userFile = $this->userDir . $userId . '/user.yml';
       
@@ -635,12 +609,9 @@ class User
           $userData = Yaml::parseFile($userFile);
           
           if( isset($userData['unique_url_tokens'][$token]) )
-          {
             return $userId;
-          }
         }
-        catch( ParseException $e )
-        {
+        catch( ParseException $e ) {
           Log::error("Error parsing user file: " . $e->getMessage());
         }
       }
@@ -663,7 +634,7 @@ class User
   private function hashPassword( $password ) : string
   {
     $config = $this->config;
-    $algo = $config->get('security.password_algo', PASSWORD_ARGON2ID);
+    $algo   = $config->get('security.password_algo', PASSWORD_ARGON2ID);
     
     return password_hash($password, $algo);
   }
@@ -674,7 +645,7 @@ class User
   private function updatePasswordHashIfNeeded( $password ) : void
   {
     $config = $this->config;
-    $algo = $config->get('security.password_algo', PASSWORD_ARGON2ID);
+    $algo   = $config->get('security.password_algo', PASSWORD_ARGON2ID);
     
     if( password_needs_rehash($this->userData['password'], $algo) )
     {

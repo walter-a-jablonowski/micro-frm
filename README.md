@@ -56,7 +56,7 @@ login:
 
 To enable Auth0 login:
 
-1. Create an account at [Auth0](https://auth0.com/)
+1. Create an account at [Auth0](https://auth0.com)
 2. Create a new application
 3. Configure the callback URL to `http://your-domain.com/index.php?page=login&provider=auth0`
 4. Update your `config.yml`:

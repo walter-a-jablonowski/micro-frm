@@ -11,12 +11,12 @@ use MicroFrm\Config;
 
 class Session
 {
-  private $sessionId = null;
+  private $sessionId   = null;
   private $sessionData = [];
-  private $sessionDir = null;
+  private $sessionDir  = null;
   private $sessionFile = null;
-  private $isStarted = false;
-  private $config = null;
+  private $isStarted   = false;
+  private $config      = null;
   
   public function __construct( Config $config )
   {
@@ -49,8 +49,8 @@ class Session
     // Set session cookie parameters
     session_set_cookie_params([
       'lifetime' => $this->config->get('session.timeout', 3600),
-      'path' => '/',
-      'secure' => $secure,
+      'path'     => '/',
+      'secure'   => $secure,
       'httponly' => $httpOnly,
       'samesite' => 'Lax'
     ]);
@@ -64,8 +64,8 @@ class Session
       $this->loadSessionData();
       
       // Regenerate session ID periodically for security
-      if( ! isset($_SESSION['last_regeneration']) || 
-          time() - $_SESSION['last_regeneration'] > 300 ) // 5 minutes
+      if( ! isset($_SESSION['last_regeneration'])
+      ||  time() - $_SESSION['last_regeneration'] > 300 ) // 5 minutes
       {
         $this->regenerateId();
       }
@@ -83,9 +83,7 @@ class Session
   {
     $sessionDir = $this->sessionDir . $this->sessionId . '/';
     if( ! is_dir($sessionDir) )
-    {
       mkdir($sessionDir, 0755, true);
-    }
     
     $this->sessionFile = $sessionDir . '-this.json';
   }
@@ -110,17 +108,13 @@ class Session
   public function save() : bool
   {
     if( ! $this->isStarted )
-    {
       return false;
-    }
     
-    try
-    {
+    try {
       file_put_contents($this->sessionFile, json_encode($this->sessionData));
       return true;
     }
-    catch( \Exception $e )
-    {
+    catch( \Exception $e ) {
       Log::error("Failed to save session: " . $e->getMessage());
       return false;
     }
@@ -132,9 +126,7 @@ class Session
   public function regenerateId() : bool
   {
     if( ! $this->isStarted )
-    {
       return false;
-    }
     
     // Save current session data
     $oldData = $this->sessionData;
@@ -219,9 +211,7 @@ class Session
   public function destroy() : bool
   {
     if( ! $this->isStarted )
-    {
       return false;
-    }
     
     // Clean up session files
     $this->cleanupSession($this->sessionId);
@@ -246,9 +236,7 @@ class Session
       foreach( $files as $file )
       {
         if( $file !== '.' && $file !== '..' )
-        {
           unlink($sessionDir . $file);
-        }
       }
       
       rmdir($sessionDir);
@@ -267,9 +255,7 @@ class Session
     foreach( $sessions as $sessionId )
     {
       if( $sessionId === '.' || $sessionId === '..' )
-      {
         continue;
-      }
       
       $sessionDir = $this->sessionDir . $sessionId;
       if( is_dir($sessionDir) )
@@ -280,15 +266,10 @@ class Session
           // Check if session is expired
           $modTime = filemtime($sessionFile);
           if( $now - $modTime > $timeout )
-          {
             $this->cleanupSession($sessionId);
-          }
         }
-        else
-        {
-          // No session file, clean up directory
+        else  // no session file, clean up directory
           $this->cleanupSession($sessionId);
-        }
       }
     }
   }
@@ -299,17 +280,13 @@ class Session
   public function getCsrfToken() : string
   {
     if( ! $this->has('csrf_token') || ! $this->has('csrf_token_time') )
-    {
       $this->regenerateCsrfToken();
-    }
     
     $expiry = $this->config->get('security.csrf_token_expiry', 3600);
     
     // Check if token is expired
     if( time() - $this->get('csrf_token_time') > $expiry )
-    {
       $this->regenerateCsrfToken();
-    }
     
     return $this->get('csrf_token');
   }

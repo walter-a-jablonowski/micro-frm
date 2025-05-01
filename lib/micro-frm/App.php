@@ -9,16 +9,16 @@ namespace MicroFrm;
 class App
 {
   private static $instance = null;
-  private $config = null;
+  private $config  = null;
   private $session = null;
-  private $user = null;
+  private $user    = null;
   
   private function __construct()
   {
     // Initialize components in the correct order to avoid circular dependencies
-    $this->config = new Config();
+    $this->config  = new Config();
     $this->session = new Session($this->config);
-    $this->user = new User($this->config, $this->session);
+    $this->user    = new User( $this->config, $this->session);
   }
   
   /**
@@ -27,9 +27,7 @@ class App
   public static function getInstance() : self
   {
     if( self::$instance === null )
-    {
       self::$instance = new self();
-    }
     
     return self::$instance;
   }

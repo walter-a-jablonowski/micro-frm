@@ -56,7 +56,9 @@ class ProviderHandler
    */
   private function handleGoogle( $action = null ) : void
   {
-    if( ! $this->config->get('login.google.enabled', false) ) {
+    // TASK: this is a dummy
+
+    if( ! $this->config->get('login.google.enabled', false)  {
       header('Location: index.php?page=login&error=google_not_enabled');
       exit;
     }

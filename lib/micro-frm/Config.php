@@ -23,8 +23,8 @@ class Config
    */
   private function loadConfig() : void
   {
-    try
-    {
+    try {
+    
       // Load main config file
       $configFile = __DIR__ . '/../../config.yml';
       
@@ -44,9 +44,7 @@ class Config
               $this->config = array_merge($this->config, $includeConfig);
             }
             else
-            {
               Log::warning("Config include file missing: $includePath");
-            }
           }
         }
       }
@@ -57,8 +55,7 @@ class Config
         $this->saveConfig();
       }
     }
-    catch( ParseException $e )
-    {
+    catch( ParseException $e ) {
       Log::error("Error parsing config file: " . $e->getMessage());
       $this->config = $this->getDefaultConfig();
     }
@@ -73,15 +70,13 @@ class Config
    */
   public function get( $key, $default = null )
   {
-    $keys = explode('.', $key);
+    $keys  = explode('.', $key);
     $value = $this->config;
     
     foreach( $keys as $k )
     {
       if( ! isset($value[$k]) )
-      {
         return $default;
-      }
       
       $value = $value[$k];
     }
@@ -103,15 +98,11 @@ class Config
     foreach( $keys as $i => $k )
     {
       if( $i === count($keys) - 1 )
-      {
         $config[$k] = $value;
-      }
       else
       {
         if( ! isset($config[$k]) || ! is_array($config[$k]) )
-        {
           $config[$k] = [];
-        }
         
         $config = &$config[$k];
       }
@@ -123,20 +114,17 @@ class Config
    */
   public function saveConfig() : bool
   {
-    try
-    {
+    try {
+
       $configDir = __DIR__ . '/../../';
       if( ! is_dir($configDir) )
-      {
         mkdir($configDir, 0755, true);
-      }
       
       $configFile = $configDir . 'config.yml';
       file_put_contents($configFile, Yaml::dump($this->config, 4));
       return true;
     }
-    catch( \Exception $e )
-    {
+    catch( \Exception $e ) {
       Log::error("Failed to save config: " . $e->getMessage());
       return false;
     }
